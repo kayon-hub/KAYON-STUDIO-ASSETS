@@ -161,13 +161,31 @@
         <td><input type="number" min="1" class="qty-input" data-row="4" style="width:50px;text-align:center;border:1px solid #ccc;border-radius:3px;padding:3px;"></td>
         <td class="price" id="sub4"></td>
       </tr>
-      <tr class="total-row">
-        <td colspan="4" style="text-align:right;font-size:14px;">總計 Total</td>
-        <td class="price" id="totalAmount" style="font-size:15px;">$0</td>
-      </tr>
-    </tbody>
-  </table>
+      <tr class="discount-row">
 
+    <td colspan="4" style="text-align:right;font-weight:bold;">
+
+        折扣 Discount
+
+    </td>
+
+    <td class="price">
+
+        <select id="discountSelect" onchange="recalcTotal()" style="padding:4px;width:120px;">
+
+            <option value="1">無折扣</option>
+
+            <option value="0.9">9折（10% OFF）</option>
+
+            <option value="0.85">85折（15% OFF）</option>
+
+            <option value="0.8">8折（20% OFF）</option>
+
+        </select>
+
+    </td>
+
+</tr>
   <div class="terms">
     <h3>合約條款 Terms &amp; Conditions</h3>
     <ol>
@@ -397,11 +415,23 @@ function recalcRow(row) {
 }
 
 function recalcTotal() {
+
   let total = 0;
+
   for (let i = 1; i <= 4; i++) {
+
     total += parseInt(document.getElementById("sub" + i).dataset.value) || 0;
+
   }
-  document.getElementById("totalAmount").textContent = "$" + total.toLocaleString();
+
+  const discount = parseFloat(document.getElementById("discountSelect").value);
+
+  total = Math.round(total * discount);
+
+  document.getElementById("totalAmount").textContent =
+
+      "$" + total.toLocaleString();
+
 }
 
 const sigData = { Customer: null, Kayon: null };
