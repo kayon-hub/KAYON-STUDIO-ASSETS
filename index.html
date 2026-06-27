@@ -87,9 +87,6 @@
   .btn-finalize:disabled { background: #aaa; cursor: not-allowed; }
   .btn-print { display: block; margin: 10px auto; padding: 8px 30px; font-size: 13px; background: #fff; color: #333; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; }
 
-  .mode-banner { text-align: center; padding: 8px; font-size: 12px; border-radius: 4px; margin-bottom: 12px; }
-  .mode-internal { background: #e8f4e8; color: #2a6e2a; border: 1px solid #a3d9a3; }
-  .mode-client { background: #fff3e0; color: #8a5c00; border: 1px solid #f0c36d; }
   .mode-toggle { display: block; margin: 0 auto 10px; padding: 6px 20px; font-size: 12px; background: #f9f9f9; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; }
   .mode-toggle:hover { background: #eee; }
 </style>
@@ -103,7 +100,6 @@
   <button class="mode-toggle" onclick="clearSavedData()" style="color:#c00;border-color:#c99;">清除儲存</button>
 </div>
 <div class="page" id="contract">
-  <div class="mode-banner no-print mode-internal" id="modeBanner">內部編輯模式 — 所有欄位皆可編輯</div>
   <div class="header">
     <img id="headerLogo"
      src="kayonstudio_logonew.png"
@@ -374,8 +370,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get("mode") === "client") {
     isClientMode = true;
-    document.getElementById("modeBanner").className = "mode-banner no-print mode-client";
-    document.getElementById("modeBanner").textContent = "客戶檢視模式 — 請確認報價內容後於下方簽名送出";
     document.getElementById("modeToggle").style.display = "none";
     document.getElementById("actionButtons").style.display = "none";
     document.getElementById("clientActions").style.display = "block";
@@ -769,17 +763,12 @@ let isClientMode = false;
 
 function toggleMode() {
   isClientMode = !isClientMode;
-  const banner = document.getElementById("modeBanner");
   const btn = document.getElementById("modeToggle");
 
   if (isClientMode) {
-    banner.className = "mode-banner no-print mode-client";
-    banner.textContent = "客戶檢視模式 — 客戶僅可簽名，如有疑問請與我方聯繫";
     btn.textContent = "切換為內部編輯模式";
     lockForClient();
   } else {
-    banner.className = "mode-banner no-print mode-internal";
-    banner.textContent = "內部編輯模式 — 所有欄位皆可編輯";
     btn.textContent = "切換為客戶檢視模式";
     unlockForInternal();
   }
