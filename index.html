@@ -347,6 +347,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initSignaturePad("Customer");
   initSignaturePad("Kayon");
+
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get("mode") === "client") {
+    isClientMode = true;
+    document.getElementById("modeBanner").className = "mode-banner no-print mode-client";
+    document.getElementById("modeBanner").textContent = "客戶檢視模式 — 客戶僅可簽名，如有疑問請與我方聯繫";
+    document.getElementById("modeToggle").style.display = "none";
+    lockForClient();
+  }
 });
 
 function onItemSelect(e) {
