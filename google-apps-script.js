@@ -1,7 +1,7 @@
 // ============================================
 // KAYON STUDIO 報價合約 — 自動寄信 + 短連結
 // ============================================
-// 部署步驟：
+// 更新步驟：
 // 1. 前往 https://script.google.com → 開啟原本的專案
 // 2. 把這段程式碼貼進去（全部取代舊的）
 // 3. 點選「部署」→「管理部署作業」→ 鉛筆圖示編輯
@@ -10,12 +10,18 @@
 
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
+    var data = JSON.parse(e.postData.contents);
 
     if (data.action === "save") {
       var id = generateId();
-      var store = PropertiesService.getScriptProperties();
-      store.setProperty("q_" + id, JSON.stringify(data.quotation));
+      var folder = getOrCreateFolder_("KAYON_Quotations");
+      var file = folder.createFile(
+        id + ".json",
+        JSON.stringify(data.quotation),
+        MimeType.PLAIN_TEXT
+      );
+      file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+      PropertiesService.getScriptProperties().setProperty("q_" + id, file.getId());
       return ContentService.createTextOutput(JSON.stringify({ success: true, id: id }))
         .setMimeType(ContentService.MimeType.JSON);
     }
@@ -68,18 +74,25 @@ function doGet(e) {
       return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Missing id" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
-    var store = PropertiesService.getScriptProperties();
-    var raw = store.getProperty("q_" + id);
-    if (!raw) {
+    var fileId = PropertiesService.getScriptProperties().getProperty("q_" + id);
+    if (!fileId) {
       return ContentService.createTextOutput(JSON.stringify({ success: false, error: "Not found" }))
         .setMimeType(ContentService.MimeType.JSON);
     }
-    return ContentService.createTextOutput(JSON.stringify({ success: true, data: JSON.parse(raw) }))
+    var file = DriveApp.getFileById(fileId);
+    var content = file.getBlob().getDataAsString();
+    return ContentService.createTextOutput(JSON.stringify({ success: true, data: JSON.parse(content) }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message }))
       .setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function getOrCreateFolder_(name) {
+  var folders = DriveApp.getFoldersByName(name);
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder(name);
 }
 
 function generateId() {
