@@ -312,7 +312,7 @@
 
   <div class="no-print" style="margin-top:20px;text-align:center;" id="actionButtons">
     <button class="btn-finalize" id="btnFinalize" onclick="finalizeContract()">完成簽署並封印文件</button>
-    <button class="btn-print" onclick="window.print()">列印 / 輸出 PDF</button>
+    <button class="btn-print" onclick="downloadPDF()">列印 / 輸出 PDF</button>
   </div>
   <div class="no-print" style="margin-top:20px;text-align:center;display:none;" id="clientActions">
     <button class="btn-finalize" id="btnClientSign" onclick="clientSubmit()">簽署送出</button>
@@ -321,7 +321,7 @@
     <div style="background:#e8f4e8;border:1px solid #a3d9a3;border-radius:6px;padding:16px;margin-bottom:12px;max-width:500px;margin-left:auto;margin-right:auto;">
       <div style="font-size:16px;font-weight:bold;margin-bottom:8px;" id="sealedTitle">文件封印中，正在寄送...</div>
       <div style="font-size:12px;color:#555;margin-bottom:12px;" id="sealedStatus">正在產生 PDF 並寄送至雙方信箱</div>
-      <button class="btn-print" onclick="window.print()" style="margin:6px;">手動儲存 PDF</button>
+      <button class="btn-print" onclick="downloadPDF()" style="margin:6px;">手動儲存 PDF</button>
     </div>
   </div>
 </div>
@@ -904,16 +904,19 @@ async function showSealedActions() {
   try {
     document.getElementById("sealedTitle").textContent = "正在產生 PDF 並寄送...";
     const el = document.getElementById("contract");
-    const pdfBlob = await html2pdf().set({
-      margin: [6, 8, 6, 8],
-      filename: "KAYON_STUDIO_" + quoteNo + ".pdf",
-      image: { type: "jpeg", quality: 0.95 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["avoid-all"] }
-    }).from(el).outputPdf("datauristring");
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+    const imgData = canvas.toDataURL("image/jpeg", 0.95);
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const mL = 8, mR = 8, mT = 6, mB = 6;
+    const pw = 210 - mL - mR, ph = 297 - mT - mB;
+    const ratio = canvas.width / canvas.height;
+    let w = pw, h = pw / ratio;
+    if (h > ph) { h = ph; w = ph * ratio; }
+    pdf.addImage(imgData, "JPEG", mL + (pw - w) / 2, mT, w, h);
+    const pdfDataUri = pdf.output("datauristring");
 
-    const base64 = pdfBlob.split(",")[1];
+    const base64 = pdfDataUri.split(",")[1];
     const recipients = ["kayon@karbonxgaiaentertainment.com"];
     if (customerEmail) recipients.push(customerEmail);
 
@@ -943,6 +946,22 @@ async function showSealedActions() {
     document.getElementById("sealedTitle").textContent = "文件已封印，但寄送失敗";
     document.getElementById("sealedStatus").textContent = "請手動儲存 PDF 並寄送（" + err.message + "）";
   }
+}
+
+async function downloadPDF() {
+  const el = document.getElementById("contract");
+  const quoteNo = document.getElementById("quoteNo").textContent;
+  const canvas = await html2canvas(el, { scale: 2, useCORS: true });
+  const imgData = canvas.toDataURL("image/jpeg", 0.95);
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  const mL = 8, mR = 8, mT = 6, mB = 6;
+  const pw = 210 - mL - mR, ph = 297 - mT - mB;
+  const ratio = canvas.width / canvas.height;
+  let w = pw, h = pw / ratio;
+  if (h > ph) { h = ph; w = ph * ratio; }
+  pdf.addImage(imgData, "JPEG", mL + (pw - w) / 2, mT, w, h);
+  pdf.save("KAYON_STUDIO_" + quoteNo + ".pdf");
 }
 </script>
 </body>
