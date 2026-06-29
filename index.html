@@ -277,27 +277,34 @@
   </div>
 
   <div class="bottom-grid">
-    <div>
-      <div class="payment-box">
-        <div class="title">匯款資訊 Payment</div>
-        銀行｜國泰世華銀行 (013) 竹城分行<br>
-        戶名｜洪曜騏<br>
-        帳號｜2105-0630-7630
-      </div>
-      <div class="custom-notes">
-        <div class="label">特殊備註（業務填寫）</div>
-        <textarea id="customNotes" style="width:100%;height:50px;border:1px solid #ccc;border-radius:4px;padding:6px;font-size:11px;resize:vertical;" placeholder="如有特殊需求或折扣授權，請註明於此..."></textarea>
-      </div>
-    </div>
-    <div>
-      <div class="contractor">
-        <strong>承接方資訊 Contractor Info</strong><br>
-        鎧洋聲影科技工作室　統編：61210989<br>
-        電話｜03-6129005<br>
-        Email｜kayon@karbonxgaiaentertainment.com<br>
-        地址｜新竹市北大路307號9F-3
+    <div class="payment-box">
+      <div class="title">匯款資訊 Payment</div>
+      銀行｜國泰世華銀行 (013) 竹城分行<br>
+      戶名｜洪曜騏<br>
+      帳號｜2105-0630-7630
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid #eee;">
+        <div style="font-weight:bold;font-size:11px;margin-bottom:6px;">製作急件 Rush Order</div>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;margin-bottom:4px;">
+          <input type="radio" name="rushOrder" value="normal" checked onchange="recalcTotal()"> 一般件（標準工期）
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">
+          <input type="radio" name="rushOrder" value="rush" onchange="recalcTotal()"> 急件（加收總額 30%）
+        </label>
+        <div id="rushNote" style="display:none;font-size:10px;color:#c00;margin-top:4px;">急件將優先排程，工期縮短約 50%</div>
       </div>
     </div>
+    <div class="payment-box">
+      <div class="title">承接方資訊 Contractor Info</div>
+      公司｜鎧洋聲影科技工作室<br>
+      統編｜61210989<br>
+      電話｜03-6109005<br>
+      Email｜kayon@karbonxgaiaentertainment.com<br>
+      地址｜新竹市北大路307號9F-3
+    </div>
+  </div>
+  <div class="custom-notes">
+    <div class="label">特殊備註（業務填寫）</div>
+    <textarea id="customNotes" style="width:100%;height:50px;border:1px solid #ccc;border-radius:4px;padding:6px;font-size:11px;resize:vertical;" placeholder="如有特殊需求或折扣授權，請註明於此..."></textarea>
   </div>
 
   <div class="sig-section">
@@ -541,6 +548,16 @@ function recalcTotal() {
     discount = parseFloat(sel.value);
   }
   total = Math.round(total * discount);
+
+  const rushRadio = document.querySelector('input[name="rushOrder"]:checked');
+  const rushNote = document.getElementById("rushNote");
+  if (rushRadio && rushRadio.value === "rush") {
+    total = Math.round(total * 1.3);
+    if (rushNote) rushNote.style.display = "block";
+  } else {
+    if (rushNote) rushNote.style.display = "none";
+  }
+
   const invoiceCheck = document.getElementById("invoiceCheck");
   const taxEl = document.getElementById("taxAmount");
   if (invoiceCheck && invoiceCheck.checked) {
@@ -687,6 +704,7 @@ function collectFormData() {
     discount: document.getElementById("discountSelect").value,
     customDiscount: document.getElementById("customDiscount").value,
     invoice: document.getElementById("invoiceCheck").checked,
+    rushOrder: (document.querySelector('input[name="rushOrder"]:checked') || {}).value || "normal",
     rows: [],
     sigKayon: sigData.Kayon,
     seals: []
@@ -773,6 +791,10 @@ async function loadSavedData() {
   if (data.customerPhone) document.getElementById("customerPhone").textContent = data.customerPhone;
   if (data.customerEmail) document.getElementById("customerEmail").textContent = data.customerEmail;
   if (data.invoice) document.getElementById("invoiceCheck").checked = true;
+  if (data.rushOrder === "rush") {
+    const rushRadio = document.querySelector('input[name="rushOrder"][value="rush"]');
+    if (rushRadio) rushRadio.checked = true;
+  }
   if (data.quoteDate) document.getElementById("quoteDate").textContent = data.quoteDate;
   if (data.quoteNo) document.getElementById("quoteNo").textContent = data.quoteNo;
   if (data.customNotes) document.getElementById("customNotes").value = data.customNotes;
@@ -867,6 +889,7 @@ function lockForClient() {
   });
   const notes = document.getElementById("customNotes");
   if (notes) { notes.disabled = true; notes.style.pointerEvents = "none"; notes.style.opacity = "0.7"; }
+  document.querySelectorAll('input[name="rushOrder"]').forEach(el => { el.disabled = true; });
 
   // Lock KAYON signature area
   const kayonActions = document.querySelector("#sigKayon")?.closest(".sig-block")?.querySelectorAll(".sig-actions button, .sig-actions label");
@@ -889,6 +912,7 @@ function unlockForInternal() {
   });
   const notes = document.getElementById("customNotes");
   if (notes) { notes.disabled = false; notes.style.pointerEvents = ""; notes.style.opacity = ""; }
+  document.querySelectorAll('input[name="rushOrder"]').forEach(el => { el.disabled = false; });
 
   const kayonActions = document.querySelector("#sigKayon")?.closest(".sig-block")?.querySelectorAll(".sig-actions button, .sig-actions label");
   kayonActions?.forEach(el => { el.style.pointerEvents = ""; el.style.opacity = ""; });
